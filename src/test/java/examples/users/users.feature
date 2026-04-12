@@ -2,7 +2,7 @@ Feature: Users
 
     Background:
         * url 'https://reqres.in'
-        * header x-api-key = 'reqres_521a922aab1c42d7b55e6d75f1ccb1f6'
+        * header x-api-key = apiKey
 
     Scenario: Get All Users
         Given path '/api/users?page=2'
@@ -21,5 +21,5 @@ Feature: Users
         And request create_user_request
         When method post
         Then status 200
-                
+
         And match response.id == '#notnull'
