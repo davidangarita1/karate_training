@@ -1,46 +1,25 @@
-Feature: sample karate test script
-  for help, see: https://github.com/karatelabs/karate/wiki/IDE-Support
+Feature: Users
 
-  Background:
-    * url 'https://jsonplaceholder.typicode.com'
+    Background:
+        * url 'https://reqres.in'
+        * header x-api-key = 'reqres_521a922aab1c42d7b55e6d75f1ccb1f6'
 
-  Scenario: get all users and then get the first user by id
-    Given path 'users'
-    When method get
-    Then status 200
+    Scenario: Get All Users
+        Given path '/api/users?page=2'
+        When method get
+        Then status 200
 
-    * def first = response[0]
-
-    Given path 'users', first.id
-    When method get
-    Then status 200
-
-  Scenario: create a user and then get it by id
-    * def user =
-      """
-      {
-        "name": "Test User",
-        "username": "testuser",
-        "email": "test@user.com",
-        "address": {
-          "street": "Has No Name",
-          "suite": "Apt. 123",
-          "city": "Electri",
-          "zipcode": "54321-6789"
+    Scenario: Create a user
+        * def create_user_request = 
+        """
+        {
+            "email": "eve.holt@reqres.in",
+            "password": "pistol"
         }
-      }
-      """
-
-    Given url 'https://jsonplaceholder.typicode.com/users'
-    And request user
-    When method post
-    Then status 201
-
-    * def id = response.id
-    * print 'created id is: ', id
-
-    Given path id
-    # When method get
-    # Then status 200
-    # And match response contains user
-  
+        """
+        Given path '/api/register'
+        And request create_user_request
+        When method post
+        Then status 200
+                
+        And match response.id == '#notnull'
