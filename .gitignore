@@ -1,6 +1,11 @@
 # Created by https://www.toptal.com/developers/gitignore/api/maven
 # Edit at https://www.toptal.com/developers/gitignore?templates=maven
 
+# Environment variables
+.env
+.env.local
+.env.*.local
+
 ### Maven ###
 target/
 pom.xml.tag
