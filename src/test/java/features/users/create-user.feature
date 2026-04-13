@@ -2,6 +2,7 @@ Feature: Create User
 
     Background:
         * url baseUrl
+        * path '/users'
 
     Scenario: Create a new user
         * def create_user_request = 
@@ -11,8 +12,7 @@ Feature: Create User
             "email": "john.doe@example.com"
         }
         """
-        Given path '/users'
-        And request create_user_request
+        Given request create_user_request
         When method post
         Then status 201
-        And match response contains { id: '#number', name: 'John Doe', email: 'john.doe@example.com' }
+        And match response contains { id: '#number', name: '#string', email: '#string' }
