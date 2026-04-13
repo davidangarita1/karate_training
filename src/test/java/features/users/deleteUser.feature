@@ -2,9 +2,9 @@ Feature: Delete User
 
     Background:
         * url baseUrl
-        * path 'users'
 
+    @smoke
     Scenario: Delete a user
-        Given path '1'
+        Given path 'users/1'
         When method delete
         Then status 200
