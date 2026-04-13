@@ -65,3 +65,16 @@ Feature: Users
         Given path '/users/1'
         When method delete
         Then status 200
+
+    Scenario Outline: Verify user emails
+        Given url 'https://jsonplaceholder.typicode.com'
+        And path 'users', <id>
+        When method get
+        Then status 200
+        And match response.email == '<email>'
+
+        Examples:
+        | id | email              |
+        | 1  | Sincere@april.biz  |
+        | 2  | Shanna@melissa.tv  |
+        | 3  | Nathan@yesenia.net |
