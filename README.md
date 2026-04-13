@@ -1,6 +1,135 @@
 # Karate Training
 
-API test automation project built with [Karate DSL](https://github.com/karatelabs/karate) (v1.5.0) and JUnit 5.
+API test automation project built with [Karate DSL](https://github.com/karatelabs/karate) (v1.5.0) and JUnit 5, targeting the [Automation Exercise API](https://automationexercise.com/api_list).
+
+## Tech Stack
+
+| Tool | Version |
+|---|---|
+| Java | 17 |
+| Karate DSL | 1.5.0 |
+| JUnit 5 | bundled |
+| Maven | 3.8+ |
+
+## Project Structure
+
+```
+src/test/java/
+├── karate-config.js          # Global config: baseUrl and env variables
+├── logback-test.xml          # Logging configuration
+└── features/
+    ├── FeaturesTest.java     # Parallel runner — executes all feature files
+    └── user/
+        ├── UserRunner.java   # JUnit 5 runner for the user domain
+        ├── createUser.feature  # POST /api/createAccount
+        ├── getUser.feature     # GET  /api/getUserDetailByEmail
+        ├── updateUser.feature  # PUT  /api/updateAccount
+        └── deleteUser.feature  # DELETE /api/deleteAccount
+```
+
+## Prerequisites
+
+- Java 17+
+- Maven 3.8+
+
+## Running Tests
+
+```bash
+# Run all feature files in parallel (5 threads)
+mvn clean test
+
+# Run only the user domain
+mvn test -Dtest=UserRunner
+
+# Run only @smoke scenarios
+mvn test -Dkarate.options="--tags @smoke"
+
+# Run only @regression scenarios
+mvn test -Dkarate.options="--tags @regression"
+```
+
+The HTML report is generated at:
+```
+target/karate-reports/karate-summary.html
+```
+
+## Test Tags
+
+| Tag | When to run | Purpose |
+|---|---|---|
+| `@smoke` | Every build | Critical happy-path — all 4 CRUD operations |
+| `@regression` | Pre-release | Full coverage including edge cases |
+
+## API Under Test
+
+Base URL: `https://automationexercise.com`
+
+| Feature | Method | Endpoint |
+|---|---|---|
+| `createUser` | POST | `/api/createAccount` |
+| `getUser` | GET | `/api/getUserDetailByEmail?email=` |
+| `updateUser` | PUT | `/api/updateAccount` |
+| `deleteUser` | DELETE | `/api/deleteAccount` |
+
+> `getUser`, `updateUser`, and `deleteUser` depend on `createUser` as setup — it is called via `call read('createUser.feature')` in each Background.
+
+## Key Karate DSL Patterns Used
+
+### Schema validation with fuzzy matchers
+
+```gherkin
+* def userModel = { id: '#number', name: '#string', email: '#string' }
+And match response.user contains userModel
+```
+
+### Reusing a feature as setup (no helper files)
+
+```gherkin
+Background:
+    * url baseUrl
+    * def account = call read('createUser.feature')
+
+Scenario: Delete an existing user account
+    Given path 'api/deleteAccount'
+    And form field email = account.email
+    And form field password = account.password
+    When method delete
+    Then status 200
+    And match response == { responseCode: 200, message: 'Account deleted!' }
+```
+
+### Form fields with inline interpolation
+
+```gherkin
+* def email = 'test.' + java.util.UUID.randomUUID() + '@test.com'
+* def formData =
+"""
+{
+    "email": "#(email)",
+    "password": "#(password)"
+}
+"""
+And form fields formData
+```
+
+### Fuzzy matchers reference
+
+| Matcher | Meaning |
+|---|---|
+| `'#number'` | Any number |
+| `'#string'` | Any string |
+| `'#boolean'` | Any boolean |
+| `'#notnull'` | Not null |
+| `'#null'` | Null |
+| `'#ignore'` | Skip field |
+| `'#array'` | Any array |
+| `'#[n]'` | Array of exactly n items |
+
+## Security
+
+- No credentials are hardcoded in feature files
+- Unique test emails are generated per run using `UUID.randomUUID()` to avoid conflicts across parallel executions
+
 
 ## Project Structure
 
