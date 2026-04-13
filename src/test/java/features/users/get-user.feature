@@ -5,11 +5,11 @@ Feature: Get Users
         * def userModel = { id: '#number', name: '#string', email: '#string' }
 
     Scenario: List all users
-        Given path '/users'
+        Given path 'users'
         When method get
         Then status 200
         And match response == '#[10]'
-        And match each response contains { id: '#number', name: '#string', email: '#string' }
+        And match each response contains userModel
 
     Scenario: Get a single user
         Given path '/users/1'
