@@ -1,6 +1,6 @@
 # Karate Training
 
-API test automation project built with [Karate](https://github.com/karatelabs/karate) and JUnit 5.
+API test automation project built with [Karate DSL](https://github.com/karatelabs/karate) (v1.5.0) and JUnit 5.
 
 ## Project Structure
 
@@ -8,12 +8,17 @@ API test automation project built with [Karate](https://github.com/karatelabs/ka
 src/
 └── test/
     └── java/
-        ├── karate-config.js          # Global configuration and environment variables
-        ├── logback-test.xml           # Logging configuration
-        └── examples/
+        ├── karate-config.js              # Global config — loads env vars, sets baseUrl, apiKey
+        ├── logback-test.xml              # Logging configuration
+        └── features/
+            ├── FeaturesTest.java         # Parallel runner — entry point for all features
             └── users/
-                ├── users.feature      # User API test scenarios
-                └── UsersRunner.java   # JUnit 5 test runner
+                ├── UsersRunner.java      # JUnit 5 runner for the users domain
+                ├── getUser.feature       # GET /users — list and retrieve users
+                ├── createUser.feature    # POST /users — create a user
+                ├── updateUser.feature    # PUT /users/{id} — full update
+                ├── patchUser.feature     # PATCH /users/{id} — partial update
+                └── deleteUser.feature    # DELETE /users/{id} — delete a user
 ```
 
 ## Prerequisites
@@ -36,52 +41,87 @@ src/
 ## Running Tests
 
 ```bash
+# Run all tests in parallel (5 threads)
 mvn clean test
+
+# Run only the users domain via its runner
+mvn test -Dtest=UsersRunner
+
+# Run with a specific environment
+mvn test -Dkarate.env=e2e
+
+# Run only @smoke scenarios
+mvn test -Dkarate.options="--tags @smoke"
+
+# Run only @regression scenarios
+mvn test -Dkarate.options="--tags @regression"
 ```
+
+## Test Tags
+
+| Tag | Purpose |
+|---|---|
+| `@smoke` | Critical happy-path scenarios — run on every build |
+| `@regression` | Full coverage — run before releases |
 
 ## Writing Tests
 
 Tests are written in [Gherkin](https://cucumber.io/docs/gherkin/) syntax using Karate's DSL.
+One `.feature` file per HTTP verb / operation. Shared setup lives in `Background`.
 
 ### Feature File Example
 
 ```gherkin
-Feature: Users
+Feature: Get Users
 
     Background:
-        * url 'https://reqres.in'
-        * header x-api-key = apiKey
+        * url baseUrl
+        * def userModel = { id: '#number', name: '#string', email: '#string' }
 
-    Scenario: Get All Users
-        Given path '/api/users?page=2'
+    @smoke
+    Scenario: Get a single user
+        Given path 'users/1'
         When method get
         Then status 200
+        And match response contains userModel
 
-    Scenario: Create a user
-        * def create_user_request =
-        """
-        {
-            "email": "eve.holt@reqres.in",
-            "password": "pistol"
-        }
-        """
-        Given path '/api/register'
-        And request create_user_request
-        When method post
+    @regression
+    Scenario Outline: Verify user emails
+        Given path 'users', <id>
+        When method get
         Then status 200
-        And match response.id == '#notnull'
+        And match response.email == '<email>'
+
+        Examples:
+        | id | email             |
+        | 1  | Sincere@april.biz |
+        | 2  | Shanna@melissa.tv |
 ```
 
-### Key Karate DSL Keywords
+### Karate Fuzzy Matchers
+
+| Matcher | Description |
+|---|---|
+| `'#number'` | Any numeric value |
+| `'#string'` | Any string value |
+| `'#boolean'` | Any boolean value |
+| `'#notnull'` | Not null |
+| `'#null'` | Null |
+| `'#ignore'` | Skip this field |
+| `'#[n]'` | Array of exactly `n` items |
+| `'#array'` | Any array |
+| `'#regex ...'` | Regex match |
+
+### Key DSL Keywords
 
 | Keyword | Description |
 |---|---|
 | `Given` | Set up the request (path, headers, body) |
-| `When` | Execute the HTTP method (`get`, `post`, `put`, `delete`) |
+| `When` | Execute the HTTP method (`get`, `post`, `put`, `patch`, `delete`) |
 | `Then` | Assert the response status or body |
 | `And` | Chain additional steps |
-| `* def` | Define a variable |
-| `* match` | Assert a value or pattern |
+| `* def` | Define a variable or schema |
+| `* match` | Assert a value or structure |
 
 ## Environment Variables
 
@@ -100,3 +140,4 @@ Configuration is managed in `karate-config.js`, which loads variables with this 
 
 - Never hardcode secrets in `.feature` files
 - The `.env` file is listed in `.gitignore` — use `.env.example` as a template for sharing required variables
+
