@@ -10,8 +10,7 @@ function fn() {
   var config = {
     env: env,
     apiKey: java.lang.System.getenv('API_KEY') || dotenv.get('API_KEY') || 'default-key',
-    baseUrl: 'https://jsonplaceholder.typicode.com',
-    aeBaseUrl: 'https://automationexercise.com'
+    baseUrl: 'https://automationexercise.com'
   }
   if (env == 'dev') {
     // customize
