@@ -9,8 +9,8 @@ function fn() {
   }
   var config = {
     env: env,
-    myVarName: 'someValue',
-    apiKey: java.lang.System.getenv('API_KEY') || dotenv.get('API_KEY') || 'default-key'
+    apiKey: java.lang.System.getenv('API_KEY') || dotenv.get('API_KEY') || 'default-key',
+    baseUrl: 'https://jsonplaceholder.typicode.com'
   }
   if (env == 'dev') {
     // customize
